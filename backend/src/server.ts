@@ -32,6 +32,14 @@ app.use('/api/drops', dropRoutes)
 app.use('/api/reservations', reservationRoutes)
 initSocket(io)
 
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id)
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id)
+  })
+})
+
+
 connectDB().then(async () => {
   await sequelize.sync()
   httpServer.listen(PORT, () => {

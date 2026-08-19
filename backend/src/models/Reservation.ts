@@ -5,7 +5,7 @@ interface ReservationAttributes {
     id: number
     dropId: number
     userId: number
-    status: 'active' | 'completed' | 'expired'
+    status: 'active' | 'completed' | 'expired' | 'cancelled'
     expiresAt: Date
     createdAt: Date
     updatedAt: Date
@@ -17,7 +17,7 @@ export class Reservation extends Model<ReservationAttributes, ReservationCreatio
     declare id: number
     declare dropId: number
     declare userId: number
-    declare status: 'active' | 'completed' | 'expired'
+    declare status: 'active' | 'completed' | 'expired' | 'cancelled'
     declare expiresAt: Date
     declare createdAt: Date
     declare updatedAt: Date
@@ -29,7 +29,7 @@ Reservation.init(
         id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
         dropId: { type: DataTypes.INTEGER, allowNull: false },
         userId: { type: DataTypes.INTEGER, allowNull: false },
-        status: { type: DataTypes.ENUM('active','completed','expired'), allowNull: false, defaultValue: "active" },
+        status: { type: DataTypes.ENUM('active','completed','expired', 'cancelled'), allowNull: false, defaultValue: "active" },
         expiresAt: { type: DataTypes.DATE, allowNull: false },
         createdAt: { type: DataTypes.DATE, allowNull: false },
         updatedAt: { type: DataTypes.DATE, allowNull: false },

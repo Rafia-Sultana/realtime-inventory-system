@@ -25,3 +25,13 @@ export async function purchaseReservation(reservationId: number, userId: number)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to purchase')
 }
+
+export async function cancelReservation(reservationId: number, userId: number) {
+  const res = await fetch(`${API_URL}/reservations/${reservationId}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to cancel')
+}

@@ -55,3 +55,41 @@ export async function reserveDrop(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to reserve' })
   }
 }
+
+export async function cancelReservation(req: Request, res: Response) {
+  try {
+    const reservationId = Number(req.params.id)
+    const { userId } = req.body
+
+    if (!Number.isInteger(reservationId) || !userId) {
+      res.status(400).json({ error: 'Valid reservation id and userId are required' })
+      return
+    }
+
+    const [affectedRows] = await Reservation.update(
+      { status: 'cancelled' },
+      { where: { id: reservationId, userId, status: 'active' } }
+    )
+
+    if (affectedRows === 0) {
+      res.status(409).json({ error: 'Reservation is not active' })
+      return
+    }
+
+    const reservation = await Reservation.findByPk(reservationId)
+
+    await Drop.update(
+      { availableStock: Drop.sequelize!.literal('"availableStock" + 1') },
+      { where: { id: reservation!.dropId } }
+    )
+
+    const drop = await Drop.findByPk(reservation!.dropId)
+
+    emitStockUpdate(drop!.id, drop!.availableStock)
+
+    res.json({ message: 'Reservation cancelled' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to cancel reservation' })
+  }
+}

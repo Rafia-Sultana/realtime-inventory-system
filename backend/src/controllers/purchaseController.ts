@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { Reservation, Purchase, User } from '../models'
 import { sequelize } from '../config/database'
 import { emitStockUpdate, emitBuyersUpdate } from '../sockets'
-
+import { QueryTypes } from 'sequelize'
 
 export async function completePurchase(req: Request, res: Response) {
   try {
@@ -44,21 +44,39 @@ export async function completePurchase(req: Request, res: Response) {
 
     await reservation.update({ status: 'completed' }, { transaction: t })
 
-    await t.commit()
-    const buyers = await Purchase.findAll({
-      where: { dropId: reservation.dropId },
-      order: [['createdAt', 'DESC']],
-      limit: 3,
-      include: [{ model: User }],
-    })
+    
+    // const buyers = await Purchase.findAll({
+    //   where: { dropId: reservation.dropId },
+    //   order: [['createdAt', 'DESC']],
+    //   limit: 3,
+    //   include: [{ model: User, required:true }],
+    // })
 
-    emitBuyersUpdate(
-      reservation.dropId,
-     buyers.map((b) => {
-  const buyer = b as Purchase & { user: User }
-  return { username: buyer.user.username, createdAt: buyer.createdAt }
-})
-    )
+//     emitBuyersUpdate(
+//       reservation.dropId,
+      
+//      buyers.map((b) => {
+//   const buyer = b as Purchase & { user: User }
+//   return { username: buyer.user.username, createdAt: buyer.createdAt }
+// })
+//     )
+    await t.commit()
+
+    const buyers = (await sequelize.query(
+      `SELECT u.username, p."createdAt"
+       FROM purchases p
+       JOIN users u ON u.id = p."userId"
+       WHERE p."dropId" = :dropId
+       ORDER BY p."createdAt" DESC
+       LIMIT 3`,
+      {
+        replacements: { dropId: reservation.dropId },
+        type: QueryTypes.SELECT,
+      }
+    )) as { username: string; createdAt: Date }[]
+
+    emitBuyersUpdate(reservation.dropId, buyers)
+
 
 
     res.json({ message: 'Purchase completed' })

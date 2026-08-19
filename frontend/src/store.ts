@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { fetchDrops, reserveDrop, purchaseReservation } from './api'
+import { fetchDrops, reserveDrop, purchaseReservation, cancelReservation  } from './api'
 import { socket } from './socket'
 
 interface Buyer {
@@ -31,6 +31,7 @@ interface Store {
   loadDrops: () => Promise<void>
   reserve: (dropId: number) => Promise<void>
   purchase: () => Promise<void>
+  cancel: () => Promise<void>
   applyStockUpdate: (dropId: number, availableStock: number) => void
   applyBuyersUpdate: (dropId: number, recentBuyers: Buyer[]) => void
 }
@@ -65,6 +66,14 @@ export const useStore = create<Store>((set) => ({
     await purchaseReservation(reservation.id, userId)
     set({ reservation: null })
   },
+
+    cancel: async () => {
+    const { userId, reservation } = useStore.getState()
+    if (!reservation) return
+    await cancelReservation(reservation.id, userId)
+    set({ reservation: null })
+  },
+
 
   applyStockUpdate: (dropId, availableStock) => {
     set((state) => ({

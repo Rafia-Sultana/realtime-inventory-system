@@ -23,7 +23,8 @@ export function CountdownTimer({ expiresAt, onExpire }: Props) {
   }, [expiresAt, onExpire])
 
   return (
-    <span className={secondsLeft <= 10 ? 'text-red-600 font-bold' : 'font-semibold'}>
+       <span className={secondsLeft <= 10 ? 'text-red-600 dark:text-red-400 font-bold' : 'font-semibold'}>
+
       {secondsLeft}s
     </span>
   )
