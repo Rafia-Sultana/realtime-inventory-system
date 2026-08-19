@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { Request, Response } from 'express'
-import { Drop, Reservation } from '../models'
+import { Drop, Reservation , User} from '../models'
 import { emitStockUpdate } from '../sockets'
 
 
@@ -21,8 +21,23 @@ export async function reserveDrop(req: Request, res: Response) {
       res.status(404).json({ error: 'Drop not found' })
       return
     }
+    const user = await User.findByPk(userId)
+    if (!user) {
+      res.status(400).json({ error: 'User not found' })
+      return
+    }
+
     if (drop.status !== 'active' || drop.startsAt > new Date()) {
       res.status(400).json({ error: 'This drop is not active yet' })
+      return
+    }
+
+        const existing = await Reservation.findOne({
+      where: { userId, status: 'active' },
+    })
+
+    if (existing) {
+      res.status(409).json({ error: 'You already have an active reservation' })
       return
     }
 
@@ -44,7 +59,9 @@ export async function reserveDrop(req: Request, res: Response) {
       expiresAt: new Date(Date.now() + RESERVATION_WINDOW_MS),
     })
 
-    emitStockUpdate(dropId, drop.availableStock - 1)
+    const updatedDrop = await Drop.findByPk(dropId)
+
+    emitStockUpdate(dropId, updatedDrop!.availableStock)
 
     res.status(201).json({
       message: 'Reserved for 60 seconds',

@@ -19,16 +19,31 @@ async function expireReservations() {
       transaction: t,
     })
 
+    // for (const reservation of expired) {
+    //   await Drop.update(
+    //     { availableStock: sequelize.literal('"availableStock" + 1') },
+    //     { where: { id: reservation.dropId }, transaction: t }
+    //   )
+
+    //   await reservation.update({ status: 'expired' }, { transaction: t })
+    //   updatedDropIds.add(reservation.dropId)
+
+
+    // }
     for (const reservation of expired) {
+      const [won] = await Reservation.update(
+        { status: 'expired' },
+        { where: { id: reservation.id, status: 'active' }, transaction: t }
+      )
+
+      if (won === 0) continue
+
       await Drop.update(
         { availableStock: sequelize.literal('"availableStock" + 1') },
         { where: { id: reservation.dropId }, transaction: t }
       )
 
-      await reservation.update({ status: 'expired' }, { transaction: t })
       updatedDropIds.add(reservation.dropId)
-
-
     }
 
     await t.commit()

@@ -2,9 +2,12 @@ import { Request, Response } from 'express'
 import { Reservation, Purchase, User } from '../models'
 import { sequelize } from '../config/database'
 import { emitStockUpdate, emitBuyersUpdate } from '../sockets'
-import { QueryTypes } from 'sequelize'
+import { QueryTypes, Transaction } from 'sequelize'
+
 
 export async function completePurchase(req: Request, res: Response) {
+    let t: Transaction | null = null
+
   try {
     const reservationId = Number(req.params.id)
     const { userId } = req.body
@@ -14,11 +17,13 @@ export async function completePurchase(req: Request, res: Response) {
       return
     }
 
-    const t = await sequelize.transaction()
+     t = await sequelize.transaction()
 
     const reservation = await Reservation.findOne({
       where: { id: reservationId, userId },
       transaction: t,
+     lock: t.LOCK.UPDATE,
+
     })
 
     if (!reservation) {
@@ -44,44 +49,39 @@ export async function completePurchase(req: Request, res: Response) {
 
     await reservation.update({ status: 'completed' }, { transaction: t })
 
-    
-    // const buyers = await Purchase.findAll({
-    //   where: { dropId: reservation.dropId },
-    //   order: [['createdAt', 'DESC']],
-    //   limit: 3,
-    //   include: [{ model: User, required:true }],
-    // })
-
-//     emitBuyersUpdate(
-//       reservation.dropId,
-      
-//      buyers.map((b) => {
-//   const buyer = b as Purchase & { user: User }
-//   return { username: buyer.user.username, createdAt: buyer.createdAt }
-// })
-//     )
     await t.commit()
 
     const buyers = (await sequelize.query(
-      `SELECT u.username, p."createdAt"
+          `SELECT DISTINCT ON (u.username) u.username, p."createdAt"
        FROM purchases p
        JOIN users u ON u.id = p."userId"
        WHERE p."dropId" = :dropId
-       ORDER BY p."createdAt" DESC
-       LIMIT 3`,
+       ORDER BY u.username, p."createdAt" DESC
+       LIMIT 10`
+,
       {
         replacements: { dropId: reservation.dropId },
         type: QueryTypes.SELECT,
       }
     )) as { username: string; createdAt: Date }[]
 
-    emitBuyersUpdate(reservation.dropId, buyers)
+      const recent = buyers
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 3)
+      .map((b) => ({ username: b.username, createdAt: b.createdAt }))
+
+    emitBuyersUpdate(reservation.dropId, recent)
+
 
 
 
     res.json({ message: 'Purchase completed' })
   } catch (err) {
+    if (t && !(t as Transaction & { finished?: string }).finished) {
+      await t.rollback()
+    }
     console.error(err)
     res.status(500).json({ error: 'Failed to complete purchase' })
   }
+
 }

@@ -28,6 +28,7 @@ interface Store {
   userId: number
   reservation: Reservation | null
   loading: boolean
+  error: string | null
   loadDrops: () => Promise<void>
   reserve: (dropId: number) => Promise<void>
   purchase: () => Promise<void>
@@ -41,11 +42,16 @@ export const useStore = create<Store>((set) => ({
  userId: Math.floor(Math.random() * 5) + 1,
   reservation: null,
   loading: false,
+  error: null ,
 
   loadDrops: async () => {
-    set({ loading: true })
-    const drops = await fetchDrops()
-    set({ drops, loading: false })
+    set({ loading: true, error: null })
+    try {
+      const drops = await fetchDrops()
+      set({ drops, loading: false })
+    } catch {
+      set({ error: 'Could not reach the server. Is the backend running?', loading: false })
+    }
   },
 
   reserve: async (dropId) => {

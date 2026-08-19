@@ -13,20 +13,21 @@ export async function getDrops(_req: Request, res: Response) {
     const dropIds = drops.map((d) => d.id)
 
     const buyers = await sequelize.query(
-      `SELECT p."dropId", u.username, p."createdAt"
+      `SELECT DISTINCT ON (u.username) p."dropId", u.username, p."createdAt"
        FROM purchases p
        JOIN users u ON u.id = p."userId"
        WHERE p."dropId" IN (:dropIds)
-       ORDER BY p."createdAt" DESC`,
+       ORDER BY u.username, p."createdAt" DESC`,
       {
         replacements: { dropIds },
         type: QueryTypes.SELECT,
       }
     ) as { dropId: number; username: string; createdAt: Date }[]
 
+
     const result = drops.map((drop) => ({
       ...drop.toJSON(),
-      recentBuyers: buyers.filter((b) => b.dropId === drop.id).slice(0, 3),
+      recentBuyers: buyers.filter((b) => b.dropId === drop.id).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3),
     }))
 
     res.json(result)
@@ -39,8 +40,19 @@ export async function createDrop(req: Request, res: Response) {
   try {
     const { name, price, totalStock, startsAt } = req.body
 
-    if (!name || price === undefined || totalStock === undefined || !startsAt) {
+       if (!name || price === undefined || totalStock === undefined || !startsAt) {
       res.status(400).json({ error: 'name, price, totalStock and startsAt are required' })
+      return
+    }
+
+ 
+    if (typeof price !== 'number' || price < 0) {
+      res.status(400).json({ error: 'price must be a non-negative number' })
+      return
+    }
+
+       if (typeof totalStock !== 'number' || totalStock <= 0) {
+      res.status(400).json({ error: 'totalStock must be a positive number' })
       return
     }
 

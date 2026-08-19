@@ -7,6 +7,9 @@ function App() {
   const drops = useStore((s) => s.drops)
   const loading = useStore((s) => s.loading)
   const loadDrops = useStore((s) => s.loadDrops)
+  const error = useStore((s) => s.error)
+
+  const userId = useStore((S)=>S.userId)
 
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
@@ -31,7 +34,7 @@ function App() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-indigo-600 dark:text-indigo-400">
-              SNKRDROP
+              SNKRDROP - {userId}
             </span>
           </h1>
           <button
@@ -57,6 +60,9 @@ function App() {
 
         {loading && (
           <p className="text-slate-500 dark:text-slate-400">Loading drops...</p>
+        )}
+        {error && (
+          <p className="text-red-500 dark:text-red-400 font-medium">{error}</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
