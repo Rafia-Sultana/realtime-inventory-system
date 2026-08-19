@@ -8,8 +8,7 @@ function App() {
   const loading = useStore((s) => s.loading)
   const loadDrops = useStore((s) => s.loadDrops)
   const error = useStore((s) => s.error)
-
-  const userId = useStore((S)=>S.userId)
+ 
 
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
@@ -34,7 +33,7 @@ function App() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-indigo-600 dark:text-indigo-400">
-              SNKRDROP - {userId}
+              SNKRDROP
             </span>
           </h1>
           <button
