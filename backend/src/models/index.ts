@@ -1,5 +1,5 @@
 import { User } from './User'
-import { Drop } from './drop'
+import { Drop } from './Drop'
 import { Reservation } from './Reservation'
 import { Purchase } from './Purchase'
 
