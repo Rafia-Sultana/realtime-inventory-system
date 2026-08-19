@@ -7,7 +7,7 @@ interface Buyer {
   createdAt: string
 }
 
-interface Drop {
+export interface Drop {
   id: number
   name: string
   price: string
@@ -37,7 +37,7 @@ interface Store {
 
 export const useStore = create<Store>((set) => ({
   drops: [],
-  userId: 1,
+ userId: Math.floor(Math.random() * 5) + 1,
   reservation: null,
   loading: false,
 
