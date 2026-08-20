@@ -1,4 +1,6 @@
-**Live demo:** https://realtime-inventory-system.vercel.app/
+**Live demo App:** https://realtime-inventory-system.vercel.app/
+
+ **Backend API** https://realtime-inventory-system.onrender.com/api/health
 
 # SNKRDROP — Real-Time Sneaker Drop Inventory System
 
