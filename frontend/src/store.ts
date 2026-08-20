@@ -48,7 +48,7 @@ export const useStore = create<Store>((set) => ({
 username: '',
 loadUsername: async () => {
   const { userId } = useStore.getState()
-  const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'}/users/${userId}`)
+  const res = await fetch(`${import.meta.env.VITE_API_URL as string}/users/${userId}`)
   if (res.ok) {
     const user = await res.json()
     set({ username: user.username })

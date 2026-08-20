@@ -30,7 +30,7 @@ counters that could drift.
 Reservations are not deleted on timeout — they are marked with a status and swept later.
 
 - On reserve: `expiresAt = now + 60s`, `status = 'active'`, stock already decremented.
-- A background sweeper (`setInterval`, every 10 seconds) runs inside a **transaction**:
+- A background sweeper (`setInterval`, every second) runs inside a **transaction**:
   1. Finds all reservations where `status = 'active' AND expiresAt < now`
   2. For each, first flips the status to `expired` with a **conditional update**
      (`WHERE status = 'active'`) — if 0 rows are affected, another writer (a cancel or a
@@ -41,9 +41,10 @@ Reservations are not deleted on timeout — they are marked with a status and sw
 This guarantees a unit is never returned to stock twice, no matter how a cancellation,
 purchase, and the sweeper interleave.
 
-Trade-off: a 10-second sweep interval means an expired reservation may take up to ~70 seconds
-to visually return to stock. A finer interval (or Postgres `LISTEN/NOTIFY` and per-row expiry)
-would tighten this, but the single-transaction sweep keeps recovery itself race-free.
+Trade-off: the sweeper runs every second, so an expired reservation returns to stock
+almost immediately after the 60-second window ends. A coarser interval would reduce
+database load slightly, but the single-transaction sweep keeps recovery itself
+race-free either way.
 
 ### 3. Purchases (Row Locks at the Boundary)
 
