@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, Transaction } from 'sequelize'
 import { Request, Response } from 'express'
 import { Drop, Reservation , User} from '../models'
 import { emitStockUpdate } from '../sockets'
@@ -7,6 +7,7 @@ import { emitStockUpdate } from '../sockets'
 const RESERVATION_WINDOW_MS = 60_000
 
 export async function reserveDrop(req: Request, res: Response) {
+   let t: Transaction | null = null
   try {
     const dropId = Number(req.params.id)
     const { userId } = req.body
@@ -41,13 +42,16 @@ export async function reserveDrop(req: Request, res: Response) {
       return
     }
 
+     t = await Drop.sequelize!.transaction()
     const [affectedRows] = await Drop.update(
 { availableStock: Drop.sequelize!.literal('"availableStock" - 1') },
 
-      { where: { id: dropId, availableStock: { [Op.gt]: 0 } } }
+      { where: { id: dropId, availableStock: { [Op.gt]: 0 } }, transaction: t }
     )
 
     if (affectedRows === 0) {
+            await t.rollback()
+
       res.status(409).json({ error: 'Sold out' })
       return
     }
@@ -57,7 +61,9 @@ export async function reserveDrop(req: Request, res: Response) {
       userId,
       status: 'active',
       expiresAt: new Date(Date.now() + RESERVATION_WINDOW_MS),
-    })
+    },      { transaction: t }
+)
+    await t.commit()
 
     const updatedDrop = await Drop.findByPk(dropId)
 
@@ -67,9 +73,17 @@ export async function reserveDrop(req: Request, res: Response) {
       message: 'Reserved for 60 seconds',
       reservation,
     })
-  } catch (err) {
+  } catch (err: any) {
+    if (t && !(t as any).finished) {
+      await t.rollback()
+    }
     console.error(err)
-    res.status(500).json({ error: 'Failed to reserve' })
+
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      res.status(409).json({ error: 'You already have an active reservation' })
+    } else {
+      res.status(500).json({ error: 'Failed to reserve' })
+    }
   }
 }
 

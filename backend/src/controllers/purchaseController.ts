@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { Reservation, Purchase, User } from '../models'
+import { Reservation, Purchase } from '../models'
 import { sequelize } from '../config/database'
 import { emitBuyersUpdate } from '../sockets'
 import { QueryTypes, Transaction } from 'sequelize'

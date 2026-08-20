@@ -34,7 +34,7 @@ returned in real time.
   Purchase and reservation completion are wrapped in a single database transaction with a
   row lock (`SELECT ... FOR UPDATE`).
 - **Drop Creation API** — `POST /api/drops` initializes a drop with `availableStock` set
-  server-side and an optional `startsAt` timestamp for future drops; inputs are validated
+  server-side and `startsAt` timestamp for future drops; inputs are validated
   (positive stock, non-negative price).
 - **Drop Activity Feed** — each card shows the 3 most recent distinct purchasers,
   deduplicated with Postgres `DISTINCT ON`, refreshed live via the `buyers_update` event.

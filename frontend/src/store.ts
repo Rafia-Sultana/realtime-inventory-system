@@ -55,16 +55,11 @@ export const useStore = create<Store>((set) => ({
   },
 
   reserve: async (dropId) => {
-    const { userId } = useStore.getState()
-    const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'}/drops/${dropId}/reserve`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Failed to reserve')
-    set({ reservation: data.reservation })
-  },
+  const { userId } = useStore.getState()
+  const reservation = await reserveDrop(dropId, userId)
+  set({ reservation })
+},
+
 
   purchase: async () => {
     const { userId, reservation } = useStore.getState()

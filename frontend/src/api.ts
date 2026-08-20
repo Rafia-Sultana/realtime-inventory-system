@@ -15,6 +15,8 @@ export async function reserveDrop(dropId: number, userId: number) {
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to reserve')
+  return data.reservation
+
 }
 
 export async function purchaseReservation(reservationId: number, userId: number) {
