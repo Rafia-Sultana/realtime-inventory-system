@@ -9,6 +9,8 @@ import { startExpirySweeper } from './services/expiryService'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { initSocket } from './sockets'
+import userRoutes from './routes/userRoutes'
+
 
 
 
@@ -30,6 +32,8 @@ app.get('/api/health', (_req, res) => {
 })
 app.use('/api/drops', dropRoutes)
 app.use('/api/reservations', reservationRoutes)
+app.use('/api/users', userRoutes)
+
 initSocket(io)
 
 io.on('connection', (socket) => {

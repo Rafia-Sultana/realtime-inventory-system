@@ -29,6 +29,8 @@ interface Store {
   reservation: Reservation | null
   loading: boolean
   error: string | null
+  username: string
+loadUsername: () => Promise<void>
   loadDrops: () => Promise<void>
   reserve: (dropId: number) => Promise<void>
   purchase: () => Promise<void>
@@ -43,6 +45,15 @@ export const useStore = create<Store>((set) => ({
   reservation: null,
   loading: false,
   error: null ,
+username: '',
+loadUsername: async () => {
+  const { userId } = useStore.getState()
+  const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'}/users/${userId}`)
+  if (res.ok) {
+    const user = await res.json()
+    set({ username: user.username })
+  }
+},
 
   loadDrops: async () => {
     set({ loading: true, error: null })

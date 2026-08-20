@@ -8,7 +8,9 @@ function App() {
   const loading = useStore((s) => s.loading)
   const loadDrops = useStore((s) => s.loadDrops)
   const error = useStore((s) => s.error)
- 
+ const username = useStore((s) => s.username)
+const loadUsername = useStore((s) => s.loadUsername)
+
 
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
 
@@ -21,9 +23,11 @@ function App() {
     })
   }
 
-  useEffect(() => {
-    loadDrops()
-  }, [loadDrops])
+useEffect(() => {
+  loadDrops()
+  loadUsername()
+}, [loadDrops, loadUsername])
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
@@ -33,7 +37,8 @@ function App() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-indigo-600 dark:text-indigo-400">
-              SNKRDROP
+              SNKRDROP{username ? ` — ${username}` : ''}
+
             </span>
           </h1>
           <button
