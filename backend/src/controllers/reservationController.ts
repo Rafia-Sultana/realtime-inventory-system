@@ -4,7 +4,8 @@ import { Drop, Reservation , User} from '../models'
 import { emitStockUpdate } from '../sockets'
 
 
-const RESERVATION_WINDOW_MS = 60_000
+const RESERVATION_WINDOW_MS = Number(process.env.RESERVATION_WINDOW_MS ?? 60000)
+
 
 export async function reserveDrop(req: Request, res: Response) {
    let t: Transaction | null = null

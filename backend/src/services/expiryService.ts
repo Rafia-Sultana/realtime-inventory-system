@@ -3,7 +3,8 @@ import {  Reservation, Drop } from '../models'
 import { sequelize } from '../config/database'
 import { emitStockUpdate } from '../sockets'
 
-const SWEEP_INTERVAL_MS = 10_000
+const SWEEP_INTERVAL_MS = Number(process.env.SWEEP_INTERVAL_MS ?? 1000)
+
 
 async function expireReservations() {
   const t = await sequelize.transaction()
